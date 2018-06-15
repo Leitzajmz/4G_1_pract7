@@ -33,6 +33,7 @@ long actualizacionLCD=100;
 long actualizacionSerial=100;
                                  
 short flagMessage = 0x00;
+short flagAd = 0x00;
 short flagSettings = 0x00;
 short flagConfSerial = 0x00;
 short flagUpdate = 0x00;
@@ -62,7 +63,17 @@ long GasX=0; //LPG
 long GasY=0; //Alcohol
 
 //Functions prototypes
+void LPG(void);
+void Alcohol(void);
 void portbChange();
+
+#int_ad
+void ISR_AD(){
+   GasX=read_adc(ADC_READ_ONLY);
+   GasY=read_adc(ADC_READ_ONLY);
+   flagAD = 0x01;
+}
+
 #INT_RB
 void interrupt_isr(void){     
    if(__UP__ == 0x01){
@@ -80,6 +91,11 @@ void interrupt_isr(void){
 }
 void main (void){
    setup_oscillator(OSC_16MHZ);
+   //Set ADC
+   setup_adc(ADC_CLOCK_INTERNAL);
+   setup_adc_ports(AN0_TO_AN1);
+   //enable
+   enable_interrupts(INT_AD);
    enable_interrupts(INT_RB);
    enable_interrupts(GLOBAL);
    set_tris_a(0x03);
@@ -94,6 +110,23 @@ void main (void){
       
    }
 }   
+void LPG(void){
+   if(flagAd == 0x01){
+      set_adc_channel(0);
+      delay_ms(1);
+      read_adc(ADC_START_ONLY); 
+      flagAd == 0x00;
+   }    
+}
+
+void Alcohol(void){
+   if(flagAd == 0x01){
+      set_adc_channel(1);
+      delay_ms(1);
+      read_adc(ADC_START_ONLY); 
+      flagAd == 0x00;
+   }
+}
 
 void portbChange(){
    if(flagUp==1){
