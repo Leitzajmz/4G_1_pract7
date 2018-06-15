@@ -63,8 +63,23 @@ long GasX=0; //LPG
 long GasY=0; //Alcohol
 
 //Functions prototypes
+void welcomeMessage();
+void menu();
+void menuSettings();
+void confSerialMenu();
+void confUpdateMenu();
+void confAlarmaMenu();
+void confAlamarTemp();
+void confAlamarHum();
+void confAlamarGasX();
+void confAlamarGasY();
+void menusAll();
+void senseoTemperaturaHumedad(void);
 void LPG(void);
 void Alcohol(void);
+void comunicacionSerial();
+void comunicacionLCD();
+void alarmas();
 void portbChange();
 
 #int_ad
@@ -106,10 +121,209 @@ void main (void){
    output_low(PIN_B1);
    output_low(PIN_B2);
    output_low(PIN_B3);
+   lcd_init();
+   
    while(1){
-      
+      inicioDht11(); //dht11 sensor starts
+      if(respuesta()){
+         comunicacionLCD();
+         comunicacionSerial();
+         menusAll();
+         alarmas();
+         portbChange();
+      }      
    }
-}   
+} 
+
+void welcomeMessage(){
+   if(flagMessage == 0){
+      lcd_gotoxy(1,1);
+      printf(lcd_putc,"------UDC------");
+      lcd_gotoxy(1,2);
+      printf(lcd_putc,"    WELCOME ");
+      delay_ms(500); 
+      printf(lcd_putc,"\f");
+      lcd_gotoxy(1,1);
+      printf(lcd_putc,"Loading...");
+      for(int i=1;i<17;i++){
+         lcd_gotoxy(i,2);
+         printf(lcd_putc,"°");   
+         delay_ms(150);
+      }
+      printf(lcd_putc,"\f");
+      flagMessage = 1;
+   }
+}
+
+void menu(){
+   switch(posicionMenu)
+   {
+      case 1:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Tem:      %d%cC"temperature,223);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Hum:         %d%%",humidity);
+      break;
+      case 2:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Hum:       %d%%",humidity);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"LPG:       %ld%%  ",GasX);
+      break;
+      case 3:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->LPG:     %ld%% ",GasX);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Alcohol:   %ld%% ",GasY);
+      break;
+      case 4:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Alcohol: %ld%% ",GasY);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Tem:        %d%cC"temperature,223);
+      break;
+   }   
+}
+
+void menuSettings(){
+   switch(posicionMenu)
+   {
+      case 1:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,">Conf. Serial   ");
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Conf. Update LCD");
+      break;
+      case 2:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,">Conf.Update LCD ");
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Conf. Alarmas   ");
+      break;
+      case 3:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,">Conf. Alarmas  ");
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Conf. Serial    ");
+      break;
+   }   
+}
+
+void confSerialMenu(){
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"     Tiempo     ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %ld segundos  ",auxiliarTS);
+}
+
+void confUpdateMenu(){
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"     Tiempo     ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %ld segundos  ",auxiliarLCD);
+}
+
+void confAlarmaMenu(){
+   switch(posicionMenu){
+      case 1:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Temp     %d%cC",temperatureAlarm,223);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Hum         %d%%",humidityAlarm);
+      break;
+      case 2:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Hum       %d%%",humidityAlarm);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"LPG:       %ld%%",lpgAlarm);
+      break;
+      case 3:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->LPG:     %ld%%",lpgAlarm);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Alcohol:   %ld%%",alcoholAlarm);
+      break;
+      case 4:
+         lcd_gotoxy(1,1);
+         printf(lcd_putc,"->Alcohol: %ld%%",alcoholAlarm);
+         lcd_gotoxy(1,2);
+         printf(lcd_putc,"Temp       %d%cC",temperatureAlarm,223);
+      break;
+   }   
+}
+
+void confAlamarTemp(){
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"  Temperatura   ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %d Grados  ",auxiliarAT);
+}
+
+void confAlamarHum(){
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"  Temperatura   ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %d %%  ",auxiliarAH);
+}
+
+void confAlamarGasX(){
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"  LPG   ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %ld %%  ",auxiliarALPG);
+}
+
+void confAlamarGasY(){
+   
+   lcd_gotoxy(1,1);
+   printf(lcd_putc,"    Alcohol    ");
+   lcd_gotoxy(1,2);
+   printf(lcd_putc,"  %ld %%  ",auxiliarAA);
+}
+
+void menusAll(){
+   welcomeMessage();
+   if(flagSettings == 1){
+      if(flagConfSerial==0 & flagUpdate==0 & flagAlarm==0)
+         menuSettings();
+         if(flagConfSerial==1){
+            confSerialMenu();
+         }
+         if(flagUpdate==1){
+            confUpdateMenu();
+         }
+         if(flagAlarm==1){
+            if(flagTemperature==1){
+               confAlamarTemp();
+            }
+            else if(flagHumidity==1){
+                  confAlamarHum();
+            }
+            else if(flagLpg==1){
+               confAlamarGasX();
+            }
+            else if(flagLpg==1){
+               confAlamarGasY();
+            }
+            else{
+               confAlarmaMenu();
+            }
+         }
+      }
+   else{
+      menu();
+   }
+}
+
+void senseoTemperaturaHumedad(void){       
+   humidity = readData(); 
+   int humidityDecimal = readData();
+   temperature = readData();
+   int temperatureDecimal = readData();
+   int check = readData();   
+}
+
+
 void LPG(void){
    if(flagAd == 0x01){
       set_adc_channel(0);
@@ -126,6 +340,53 @@ void Alcohol(void){
       read_adc(ADC_START_ONLY); 
       flagAd == 0x00;
    }
+}
+
+void comunicacionSerial(){
+   if(actualizacionSerial==serialTime){
+      printf("Variables sensadas********\r");
+      printf("Temperatura:   %d\r",temperature);
+      printf("Humedad:       %d\r",humidity);
+      printf("LPG:           %ld\r",GasX);
+      printf("Alcohol:       %ld\r",GasY);
+      printf("*************************\r");
+      actualizacionSerial=1;
+   }
+   else
+      actualizacionSerial++;
+}
+
+void comunicacionLCD(){
+   if(actualizacionLCD>lcdTime){  
+      senseoTemperaturaHumedad();
+      LPG();
+      Alcohol();            
+      actualizacionLCD=1;
+   }
+   else
+      actualizacionLCD++;
+}
+
+void alarmas(){
+   if(temperature>=temperatureAlarm)
+      output_high(ledTemperatura);
+   else
+      output_low(ledTemperatura);
+    
+   if(humidity>=humidityAlarm)
+      output_high(ledHumedad);
+   else
+      output_low(ledHumedad);
+ 
+   if(GasX>=lpgAlarm)
+      output_high(ledLPG);
+   else
+      output_low(ledLPG);
+     
+   if(GasY>=alcoholAlarm)
+      output_high(ledAlcohol);
+   else
+      output_low(ledAlcohol);
 }
 
 void portbChange(){
