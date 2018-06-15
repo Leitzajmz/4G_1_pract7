@@ -1,0 +1,47 @@
+#Archivos Comprimidos
+*.rar
+*.zip
+#Archivos creados por MPLAB
+*.mcp
+*.mcs
+*.mcw
+*.mptags
+*.tagsrc
+*.ccspjt
+*.cof
+*.err
+*.hex
+*.lst
+*.sym
+*.tre
+*.STA
+#Backups de Proteus
+*.DBK
+*.PWI
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+# Precompiled Headers
+*.gch
+*.pch
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+# Debug files
+*.dSYM/
